@@ -4,78 +4,57 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Paydollar
+
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+
           def complete?
-            params['']
+            status = 'Completed'
           end
 
           def item_id
-            params['']
+            params['Ref']
           end
 
-          def transaction_id
-            params['']
-          end
-
-          def received_at
-            params['']
-          end
-
-          def payer_email
-            params['']
-          end
-
-          def receiver_email
-            params['']
-          end
-
-          def security_key
-            params['']
+          def currency
+            CURRENCY_MAP.key(@most_recent_record["cur"])
           end
 
           def gross
-            params['']
+            @most_recent_record["amt"]
           end
 
-          def test?
-            params[''] == 'test'
+          def transaction_id
+            @most_recent_record["payRef"]
           end
 
           def status
-            params['']
+            uri = URI.parse(ActiveMerchant::Billing::Integrations::Paydollar.api_url)
+            form = {
+              merchantId: @options[:credential1],
+              loginId: @options[:credential3],
+              password: @options[:credential4],
+              actionType: 'Query',
+              orderRef: @params["Ref"]
+            }
+            response = Net::HTTP.post_form(uri, form)
+            records = Hash.from_xml(response.body)["records"]["record"]
+            @most_recent_record = if records.kind_of?(Array)
+                                   records.sort_by! {|rec| rec["payRef"]}
+                                   records[-1]
+                                 else
+                                   records
+                                 end
+            return 'Failed' if @most_recent_record.nil?
+            case @most_recent_record["orderStatus"]
+              when 'Accepted' then 'Completed'
+              else 'Failed'
+            end
           end
 
           def acknowledge(authcode = nil)
-            uri = URI.parse(Paydollar.api_url)
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.use_ssl = true
-
-            request = Net::HTTP::Post.new(uri.path)
-            request.basic_auth @options[:credential1], ''
-
-            response = http.request(request)
-
-            posted_json = JSON.parse(@raw).tap { |j| j.delete('currentTime') }
-            parse(response.body)
-            retrieved_json = JSON.parse(@raw).tap { |j| j.delete('currentTime') }
-
-            posted_json == retrieved_json
-
-
-            raise StandardError.new("Faulty Paydollar result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+            params.has_key?("Ref")
           end
 
-          private
-
-          def parse(post)
-            @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.-]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value.to_s) if key.present?
-            end
-          end
         end
       end
     end
