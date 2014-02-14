@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/paydollar/helper.rb'
 require File.dirname(__FILE__) + '/paydollar/notification.rb'
+require File.dirname(__FILE__) + '/paydollar/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -36,6 +37,10 @@ module ActiveMerchant #:nodoc:
 
         def self.notification(post, options = {})
           Notification.new(post, options)
+        end
+
+        def self.return(query_string, options = {})
+          Return.new(query_string, options)
         end
 
       end

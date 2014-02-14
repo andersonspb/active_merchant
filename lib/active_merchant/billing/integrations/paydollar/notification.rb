@@ -7,6 +7,11 @@ module ActiveMerchant #:nodoc:
 
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
+          def initialize (data, options = {})
+            @secret = options.delete(:credential2)
+            super
+          end
+
           def complete?
             status = 'Completed'
           end
@@ -16,43 +21,41 @@ module ActiveMerchant #:nodoc:
           end
 
           def currency
-            CURRENCY_MAP.key(@most_recent_record["cur"])
+            CURRENCY_MAP.key(@params['Cur'])
           end
 
           def gross
-            @most_recent_record["amt"]
+            @params['Amt']
           end
 
           def transaction_id
-            @most_recent_record["payRef"]
+            @params['PayRef']
           end
 
           def status
-            uri = URI.parse(ActiveMerchant::Billing::Integrations::Paydollar.api_url)
-            form = {
-              merchantId: @options[:credential1],
-              loginId: @options[:credential3],
-              password: @options[:credential4],
-              actionType: 'Query',
-              orderRef: @params["Ref"]
-            }
-            response = Net::HTTP.post_form(uri, form)
-            records = Hash.from_xml(response.body)["records"]["record"]
-            @most_recent_record = if records.kind_of?(Array)
-                                   records.sort_by! {|rec| rec["payRef"]}
-                                   records[-1]
-                                 else
-                                   records
-                                 end
-            return 'Failed' if @most_recent_record.nil?
-            case @most_recent_record["orderStatus"]
-              when 'Accepted' then 'Completed'
+            case @params['successcode']
+              when '0' then 'Completed'
               else 'Failed'
             end
           end
 
+          def generate_secure_hash
+            signature_string = [@params['src'],
+                                @params['prc'],
+                                @params['successcode'],
+                                @params['Ref'],
+                                @params['PayRef'],
+                                @params['Cur'],
+                                @params['Amt'],
+                                @params['payerAuth'],
+                                @secret].join('|')
+            Digest::SHA1.hexdigest(signature_string)
+          end
+
           def acknowledge(authcode = nil)
-            params.has_key?("Ref")
+            # paydollar supports multiple signature keys, therefore we need to check if any
+            # of their signatures matches ours
+            @params['secureHash'].split(',').include? generate_secure_hash
           end
 
         end
