@@ -7,17 +7,12 @@ module ActiveMerchant #:nodoc:
 
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
-          def initialize (data, options = {})
-            @secret = options.delete(:credential2)
-            super
-          end
-
           def complete?
             status = 'Completed'
           end
 
           def item_id
-            params['Ref']
+            @params['Ref']
           end
 
           def currency
@@ -40,16 +35,15 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_secure_hash
-            signature_string = [@params['src'],
-                                @params['prc'],
-                                @params['successcode'],
-                                @params['Ref'],
-                                @params['PayRef'],
-                                @params['Cur'],
-                                @params['Amt'],
-                                @params['payerAuth'],
-                                @secret].join('|')
-            Digest::SHA1.hexdigest(signature_string)
+            fields = [@params['src'],
+                      @params['prc'],
+                      @params['successcode'],
+                      @params['Ref'],
+                      @params['PayRef'],
+                      @params['Cur'],
+                      @params['Amt'],
+                      @params['payerAuth']]
+            ActiveMerchant::Billing::Integrations::Paydollar.sign(fields, options[:credential2])
           end
 
           def acknowledge(authcode = nil)
