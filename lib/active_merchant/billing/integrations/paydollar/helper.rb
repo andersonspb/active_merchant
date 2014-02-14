@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
                       @fields[mappings[:currency]],
                       @fields[mappings[:amount]],
                       @fields['payType']]
-            ActiveMerchant::Billing::Integrations::Paydollar.sign(fields, options[:credential2])
+            Paydollar.sign(fields, @options[:credential2])
           end
 
           def currency=(currency_code)
@@ -34,7 +34,6 @@ module ActiveMerchant #:nodoc:
           mapping :currency, 'currCode'
           mapping :return_url, ['successUrl','failUrl']
           mapping :cancel_return_url, 'cancelUrl'
-          mapping :description, 'remark'
 
         end
       end

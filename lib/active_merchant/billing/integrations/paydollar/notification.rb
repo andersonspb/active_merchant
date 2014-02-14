@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
                       @params['Cur'],
                       @params['Amt'],
                       @params['payerAuth']]
-            ActiveMerchant::Billing::Integrations::Paydollar.sign(fields, options[:credential2])
+            Paydollar.sign(fields, @options[:credential2])
           end
 
           def acknowledge(authcode = nil)
