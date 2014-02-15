@@ -80,11 +80,8 @@ card_stream:
   login: X
   password: Y
 
-cecabank:
-  merchant_id: MERCHANTID
-  acquirer_bin: ACQUIRERBIN
-  terminal_id: TERMINALID
-  key: KEY
+card_stream_modern:
+  login: "0000992"
 
 certo_direct:
   login: 1
@@ -98,7 +95,7 @@ cyber_source:
   password: Y
 
 conekta:
-  login: 1tv5yJp3xnVZ7eK67m4h
+  key: 1tv5yJp3xnVZ7eK67m4h
 
 data_cash:
   login: X
@@ -323,11 +320,6 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
-
-# Working credentials, no need to replace
-openpay:
-  key: 'sk_e568c42a6c384b7ab02cd47d2e407cab'
-  merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 optimal_payment:
   login: test
@@ -704,3 +696,8 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+# Contact people at payture.ru to get your credentials
+payture:
+  login: X
+  password: Y
